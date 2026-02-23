@@ -17,9 +17,9 @@
     under the License.
 */
 
-const fs = require('fs');
-const os = require('os');
-const path = require('path');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
 const rewire = require('rewire');
 
 describe('AndroidManifest', () => {
@@ -107,18 +107,6 @@ describe('AndroidManifest', () => {
             const newVersionName = `${VERSION_CODE}12345`;
             manifest.setVersionCode(newVersionName);
             expect(manifest.getVersionCode()).toBe(newVersionName);
-        });
-    });
-
-    describe('packageId', () => {
-        it('should get the package ID', () => {
-            expect(manifest.getPackageId()).toBe(PACKAGE_ID);
-        });
-
-        it('should set the package ID', () => {
-            const newPackageId = `${PACKAGE_ID}new`;
-            manifest.setPackageId(newPackageId);
-            expect(manifest.getPackageId()).toBe(newPackageId);
         });
     });
 

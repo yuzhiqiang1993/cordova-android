@@ -19,16 +19,16 @@
        under the License.
 */
 
-const path = require('path');
+const path = require('node:path');
 const execa = require('execa');
-const fs = require('fs-extra');
+const fs = require('node:fs');
 const ProjectBuilder = require('../lib/builders/ProjectBuilder');
 
 class AndroidTestRunner {
     constructor (testTitle, projectDir) {
         this.testTitle = testTitle;
         this.projectDir = projectDir;
-        this.gradleWrapper = path.join(this.projectDir, 'gradlew');
+        this.gradleWrapper = path.join(this.projectDir, 'tools/gradlew');
     }
 
     _gradlew (...args) {
@@ -42,8 +42,18 @@ class AndroidTestRunner {
         );
     }
 
+    _getGradleVersion () {
+        const config = JSON.parse(
+            fs.readFileSync(path.resolve(this.projectDir, '../../framework/cdv-gradle-config-defaults.json'), {
+                encoding: 'utf-8'
+            })
+        );
+
+        return config.GRADLE_VERSION;
+    }
+
     _createProjectBuilder () {
-        return new ProjectBuilder(this.projectDir).runGradleWrapper('gradle');
+        return new ProjectBuilder(this.projectDir).installGradleWrapper(this._getGradleVersion());
     }
 
     run () {
@@ -52,15 +62,18 @@ class AndroidTestRunner {
             .then(_ => {
                 // TODO we should probably not only copy these files, but instead create a new project from scratch
                 fs.copyFileSync(path.resolve(this.projectDir, '../../framework/cdv-gradle-config-defaults.json'), path.resolve(this.projectDir, 'cdv-gradle-config.json'));
+                fs.copyFileSync(path.resolve(this.projectDir, '../../framework/repositories.gradle'), path.resolve(this.projectDir, 'repositories.gradle'));
+                fs.copyFileSync(path.resolve(this.projectDir, '../../framework/repositories.gradle'), path.resolve(this.projectDir, 'app', 'repositories.gradle'));
+                fs.cpSync(path.resolve(this.projectDir, '../../templates/project/tools'), path.resolve(this.projectDir, 'tools'), { recursive: true });
                 fs.copyFileSync(
                     path.join(__dirname, '../templates/project/assets/www/cordova.js'),
                     path.join(this.projectDir, 'app/src/main/assets/www/cordova.js')
                 );
             })
             .then(_ => this._createProjectBuilder())
-            .then(_ => this._gradlew('--version'))
+            .then(_ => this._gradlew(['--version']))
             .then(_ => console.log(`[${this.testTitle}] Gradle wrapper is ready. Running tests now.`))
-            .then(_ => this._gradlew('test'))
+            .then(_ => this._gradlew(['test']))
             .then(_ => console.log(`[${this.testTitle}] Java unit tests completed successfully`));
     }
 }

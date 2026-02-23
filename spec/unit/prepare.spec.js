@@ -18,11 +18,13 @@
 */
 
 const rewire = require('rewire');
-const path = require('path');
+const path = require('node:path');
 const CordovaError = require('cordova-common').CordovaError;
 const GradlePropertiesParser = require('../../lib/config/GradlePropertiesParser');
 const utils = require('../../lib/utils');
 const et = require('elementtree');
+const MockCordovaGradleConfigParser = require('./mocks/config/MockCordovaGradleConfigParser');
+const CordovaGradleConfigParserFactory = require('../../lib/config/CordovaGradleConfigParserFactory');
 
 const PATH_RESOURCE = path.join('platforms', 'android', 'app', 'src', 'main', 'res');
 
@@ -51,8 +53,10 @@ function createResourceMap (target) {
         if (!target || target === 'ic_launcher.png') resources[path.join(PATH_RESOURCE, mipmap, 'ic_launcher.png')] = null;
         if (!target || target === 'ic_launcher_foreground.png') resources[path.join(PATH_RESOURCE, mipmap, 'ic_launcher_foreground.png')] = null;
         if (!target || target === 'ic_launcher_background.png') resources[path.join(PATH_RESOURCE, mipmap, 'ic_launcher_background.png')] = null;
+        if (!target || target === 'ic_launcher_background.png') resources[path.join(PATH_RESOURCE, mipmap, 'ic_launcher_monochrome.png')] = null;
         if (!target || target === 'ic_launcher_foreground.xml') resources[path.join(PATH_RESOURCE, mipmap, 'ic_launcher_foreground.xml')] = null;
         if (!target || target === 'ic_launcher_background.xml') resources[path.join(PATH_RESOURCE, mipmap, 'ic_launcher_background.xml')] = null;
+        if (!target || target === 'ic_launcher_background.xml') resources[path.join(PATH_RESOURCE, mipmap, 'ic_launcher_monochrome.xml')] = null;
 
         if (
             !mipmap.includes('-v26') &&
@@ -90,6 +94,12 @@ describe('prepare', () => {
     // Spies
     let emitSpy;
     let updatePathsSpy;
+
+    const PROJECT_DIR = 'platforms/android';
+
+    beforeAll(() => {
+        spyOn(CordovaGradleConfigParserFactory, 'create').and.returnValue(new MockCordovaGradleConfigParser(PROJECT_DIR));
+    });
 
     beforeEach(() => {
         prepare = rewire('../../lib/prepare');
@@ -136,10 +146,14 @@ describe('prepare', () => {
                     return createResourceMap('ic_launcher_foreground.png');
                 } else if (resourceName.includes('ic_launcher_background.png')) {
                     return createResourceMap('ic_launcher_background.png');
+                } else if (resourceName.includes('ic_launcher_monochrome.png')) {
+                    return createResourceMap('ic_launcher_monochrome.png');
                 } else if (resourceName.includes('ic_launcher_foreground.xml')) {
                     return createResourceMap('ic_launcher_foreground.xml');
                 } else if (resourceName.includes('ic_launcher_background.xml')) {
                     return createResourceMap('ic_launcher_background.xml');
+                } else if (resourceName.includes('ic_launcher_monochrome.xml')) {
+                    return createResourceMap('ic_launcher_monochrome.xml');
                 } else if (resourceName.includes('ic_launcher.xml')) {
                     return createResourceMap('ic_launcher.xml');
                 }
@@ -305,7 +319,9 @@ describe('prepare', () => {
                 return [mockGetIconItem({
                     density: 'mdpi',
                     background: 'res/icon/android/mdpi-background.png',
-                    foreground: 'res/icon/android/mdpi-foreground.xml'
+                    foreground: 'res/icon/android/mdpi-foreground.xml',
+                    monochrome: 'res/icon/android/mdpi-monochrome.png'
+
                 })];
             };
 
@@ -343,7 +359,8 @@ describe('prepare', () => {
                 return [mockGetIconItem({
                     density: 'mdpi',
                     background: 'res/icon/android/mdpi-background.png',
-                    foreground: 'res/icon/android/mdpi-foreground.png'
+                    foreground: 'res/icon/android/mdpi-foreground.png',
+                    monochrome: 'res/icon/android/mdpi-monochrome.png'
                 })];
             };
 
@@ -352,6 +369,7 @@ describe('prepare', () => {
             const phaseOneModification = {};
             phaseOneModification[path.join(PATH_RESOURCE, 'mipmap-mdpi-v26', 'ic_launcher_foreground.png')] = 'res/icon/android/mdpi-foreground.png';
             phaseOneModification[path.join(PATH_RESOURCE, 'mipmap-mdpi-v26', 'ic_launcher_background.png')] = 'res/icon/android/mdpi-background.png';
+            phaseOneModification[path.join(PATH_RESOURCE, 'mipmap-mdpi-v26', 'ic_launcher_monochrome.png')] = 'res/icon/android/mdpi-monochrome.png';
             const phaseOneUpdatedIconsForAdaptive = Object.assign({}, resourceMap, phaseOneModification);
 
             updateIconResourceForAdaptiveSpy = jasmine.createSpy('updateIconResourceForAdaptiveSpy');
@@ -363,6 +381,7 @@ describe('prepare', () => {
             const phaseTwoModification = {};
             phaseTwoModification[path.join(PATH_RESOURCE, 'mipmap-mdpi', 'ic_launcher.png')] = 'res/icon/android/mdpi-foreground.png';
             phaseTwoModification[path.join(PATH_RESOURCE, 'mipmap-mdpi-v26', 'ic_launcher_background.png')] = 'res/icon/android/mdpi-background.png';
+            phaseTwoModification[path.join(PATH_RESOURCE, 'mipmap-mdpi-v26', 'ic_launcher_monochrome.png')] = 'res/icon/android/mdpi-monochrome.png';
             const phaseTwoUpdatedIconsForLegacy = Object.assign({}, phaseOneUpdatedIconsForAdaptive, phaseTwoModification);
 
             updateIconResourceForLegacySpy = jasmine.createSpy('updateIconResourceForLegacySpy');
@@ -400,7 +419,8 @@ describe('prepare', () => {
                     density: 'mdpi',
                     src: 'res/icon/android/mdpi-icon.png',
                     background: 'res/icon/android/mdpi-background.png',
-                    foreground: 'res/icon/android/mdpi-foreground.png'
+                    foreground: 'res/icon/android/mdpi-foreground.png',
+                    monochrome: 'res/icon/android/mdpi-monochrome.png'
                 })];
             };
 
@@ -409,6 +429,7 @@ describe('prepare', () => {
             const phaseOneModification = {};
             phaseOneModification[path.join(PATH_RESOURCE, 'mipmap-mdpi-v26', 'ic_launcher_foreground.png')] = 'res/icon/android/mdpi-foreground.png';
             phaseOneModification[path.join(PATH_RESOURCE, 'mipmap-mdpi-v26', 'ic_launcher_background.png')] = 'res/icon/android/mdpi-background.png';
+            phaseOneModification[path.join(PATH_RESOURCE, 'mipmap-mdpi-v26', 'ic_launcher_monochrome.png')] = 'res/icon/android/mdpi-monochrome.png';
             const phaseOneUpdatedIconsForAdaptive = Object.assign({}, resourceMap, phaseOneModification);
 
             updateIconResourceForAdaptiveSpy = jasmine.createSpy('updateIconResourceForAdaptiveSpy');
@@ -420,6 +441,7 @@ describe('prepare', () => {
             const phaseTwoModification = {};
             phaseTwoModification[path.join(PATH_RESOURCE, 'mipmap-mdpi', 'ic_launcher.png')] = 'res/icon/android/mdpi-foreground.png';
             phaseTwoModification[path.join(PATH_RESOURCE, 'mipmap-mdpi-v26', 'ic_launcher_background.png')] = 'res/icon/android/mdpi-background.png';
+            phaseTwoModification[path.join(PATH_RESOURCE, 'mipmap-mdpi-v26', 'ic_launcher_monochrome.png')] = 'res/icon/android/mdpi-monochrome.png';
             const phaseTwoUpdatedIconsForLegacy = Object.assign({}, phaseOneUpdatedIconsForAdaptive, phaseTwoModification);
 
             updateIconResourceForLegacySpy = jasmine.createSpy('updateIconResourceForLegacySpy');
@@ -511,13 +533,15 @@ describe('prepare', () => {
             const ldpi = mockGetIconItem({
                 density: 'ldpi',
                 background: 'res/icon/android/ldpi-background.png',
-                foreground: 'res/icon/android/ldpi-foreground.png'
+                foreground: 'res/icon/android/ldpi-foreground.png',
+                monochrome: 'res/icon/android/ldpi-monochrome.png'
             });
 
             const mdpi = mockGetIconItem({
                 density: 'mdpi',
                 background: 'res/icon/android/mdpi-background.png',
-                foreground: 'res/icon/android/mdpi-foreground.png'
+                foreground: 'res/icon/android/mdpi-foreground.png',
+                monochrome: 'res/icon/android/mdpi-monochrome.png'
             });
 
             const icons = [ldpi, mdpi];
@@ -606,41 +630,106 @@ describe('prepare', () => {
         let preparedIcons;
         let resourceMap;
 
-        beforeEach(function () {
-            // Mocked Data
-            platformResourcesDir = PATH_RESOURCE;
-            preparedIcons = {
-                android_icons: {
-                    mdpi: mockGetIconItem({
-                        density: 'mdpi',
-                        background: 'res/icon/android/mdpi-background.png',
-                        foreground: 'res/icon/android/mdpi-foreground.png'
-                    })
-                },
-                default_icon: undefined
-            };
+        describe('without monochrome', () => {
+            beforeEach(function () {
+                // Mocked Data
+                platformResourcesDir = PATH_RESOURCE;
+                preparedIcons = {
+                    android_icons: {
+                        mdpi: mockGetIconItem({
+                            density: 'mdpi',
+                            background: 'res/icon/android/mdpi-background.png',
+                            foreground: 'res/icon/android/mdpi-foreground.png'
+                        })
+                    },
+                    default_icon: undefined
+                };
 
-            resourceMap = createResourceMap();
+                resourceMap = createResourceMap();
 
-            fsWriteFileSyncSpy = jasmine.createSpy('writeFileSync');
-            prepare.__set__('fs', {
-                writeFileSync: fsWriteFileSyncSpy
+                fsWriteFileSyncSpy = jasmine.createSpy('writeFileSync');
+                prepare.__set__('fs', {
+                    writeFileSync: fsWriteFileSyncSpy
+                });
+            });
+
+            it('Test#001 : Should update resource map with prepared icons.', function () {
+            // Get method for testing
+                const updateIconResourceForAdaptive = prepare.__get__('updateIconResourceForAdaptive');
+
+                // Run Test
+                const expectedModification = {};
+                expectedModification[path.join(PATH_RESOURCE, 'mipmap-mdpi-v26', 'ic_launcher_background.png')] = 'res/icon/android/mdpi-background.png';
+                expectedModification[path.join(PATH_RESOURCE, 'mipmap-mdpi-v26', 'ic_launcher_foreground.png')] = 'res/icon/android/mdpi-foreground.png';
+
+                const expected = Object.assign({}, resourceMap, expectedModification);
+                const actual = updateIconResourceForAdaptive(preparedIcons, resourceMap, platformResourcesDir);
+
+                expect(actual).toEqual(expected);
             });
         });
 
-        it('Test#001 : Should update resource map with prepared icons.', function () {
-        // Get method for testing
-            const updateIconResourceForAdaptive = prepare.__get__('updateIconResourceForAdaptive');
+        describe('with monochrome', () => {
+            beforeEach(function () {
+                // Mocked Data
+                platformResourcesDir = PATH_RESOURCE;
+                preparedIcons = {
+                    android_icons: {
+                        mdpi: mockGetIconItem({
+                            density: 'mdpi',
+                            background: 'res/icon/android/mdpi-background.png',
+                            foreground: 'res/icon/android/mdpi-foreground.png',
+                            monochrome: 'res/icon/android/mdpi-monochrome.png'
+                        })
+                    },
+                    default_icon: undefined
+                };
 
-            // Run Test
-            const expectedModification = {};
-            expectedModification[path.join(PATH_RESOURCE, 'mipmap-mdpi-v26', 'ic_launcher_background.png')] = 'res/icon/android/mdpi-background.png';
-            expectedModification[path.join(PATH_RESOURCE, 'mipmap-mdpi-v26', 'ic_launcher_foreground.png')] = 'res/icon/android/mdpi-foreground.png';
+                resourceMap = createResourceMap();
 
-            const expected = Object.assign({}, resourceMap, expectedModification);
-            const actual = updateIconResourceForAdaptive(preparedIcons, resourceMap, platformResourcesDir);
+                fsWriteFileSyncSpy = jasmine.createSpy('writeFileSync');
+                prepare.__set__('fs', {
+                    writeFileSync: fsWriteFileSyncSpy
+                });
+            });
 
-            expect(actual).toEqual(expected);
+            it('Test#002 : Should update resource map with prepared icons.', function () {
+            // Get method for testing
+                const updateIconResourceForAdaptive = prepare.__get__('updateIconResourceForAdaptive');
+
+                // Run Test
+                const expectedModification = {};
+                expectedModification[path.join(PATH_RESOURCE, 'mipmap-mdpi-v26', 'ic_launcher_background.png')] = 'res/icon/android/mdpi-background.png';
+                expectedModification[path.join(PATH_RESOURCE, 'mipmap-mdpi-v26', 'ic_launcher_foreground.png')] = 'res/icon/android/mdpi-foreground.png';
+                expectedModification[path.join(PATH_RESOURCE, 'mipmap-mdpi-v26', 'ic_launcher_monochrome.png')] = 'res/icon/android/mdpi-monochrome.png';
+
+                const expected = Object.assign({}, resourceMap, expectedModification);
+                const actual = updateIconResourceForAdaptive(preparedIcons, resourceMap, platformResourcesDir);
+
+                expect(actual).toEqual(expected);
+            });
+
+            it('Test#003 : should emit if monochrome is supplied without adaptive background', () => {
+                const updateIconResourceForAdaptive = prepare.__get__('updateIconResourceForAdaptive');
+
+                preparedIcons.android_icons.mdpi.background = undefined;
+                updateIconResourceForAdaptive(preparedIcons, resourceMap, platformResourcesDir);
+
+                const actualEmitArgs = emitSpy.calls.mostRecent().args;
+                expect(actualEmitArgs[0]).toBe('warn');
+                expect(actualEmitArgs[1]).toMatch(/Monochrome icon found but without adaptive properties./g);
+            });
+
+            it('Test#004 : should emit if monochrome is supplied without adaptive foreground', () => {
+                const updateIconResourceForAdaptive = prepare.__get__('updateIconResourceForAdaptive');
+
+                preparedIcons.android_icons.mdpi.foreground = undefined;
+                updateIconResourceForAdaptive(preparedIcons, resourceMap, platformResourcesDir);
+
+                const actualEmitArgs = emitSpy.calls.mostRecent().args;
+                expect(actualEmitArgs[0]).toBe('warn');
+                expect(actualEmitArgs[1]).toMatch(/Monochrome icon found but without adaptive properties./g);
+            });
         });
     });
 
@@ -668,7 +757,8 @@ describe('prepare', () => {
             const icons = [mockGetIconItem({
                 density: 'mdpi',
                 background: 'res/icon/android/mdpi-background.png',
-                foreground: 'res/icon/android/mdpi-foreground.png'
+                foreground: 'res/icon/android/mdpi-foreground.png',
+                monochrome: 'res/icon/android/mdpi-monochrome.png'
             })];
             const projectRoot = '/mock';
             const projectConfig = {
@@ -809,9 +899,9 @@ describe('prepare', () => {
 
         // Spies
         let replaceFileContents;
-        let ensureDirSyncSpy;
-        let copySyncSpy;
-        let removeSyncSpy;
+        let mkdirSyncSpy;
+        let cpSyncSpy;
+        let rmSyncSpy;
 
         // Mock Data
         let cordovaProject;
@@ -840,7 +930,7 @@ describe('prepare', () => {
                 locations: {
                     plugins: '/mock/plugins',
                     www: '/mock/www',
-                    strings: '/mock/res/values/strings.xml'
+                    strings: '/mock/res/values/cdv_strings.xml'
                 }
             };
 
@@ -860,7 +950,7 @@ describe('prepare', () => {
 
             prepare.__set__('updateWww', jasmine.createSpy('updateWww'));
             prepare.__set__('updateIcons', jasmine.createSpy('updateIcons').and.returnValue(Promise.resolve()));
-            prepare.__set__('updateProjectSplashScreen', jasmine.createSpy('updateProjectSplashScreen'));
+            prepare.__set__('updateProjectTheme', jasmine.createSpy('updateProjectTheme'));
             prepare.__set__('warnForDeprecatedSplashScreen', jasmine.createSpy('warnForDeprecatedSplashScreen')
                 .and.returnValue(Promise.resolve()));
             prepare.__set__('updateFileResources', jasmine.createSpy('updateFileResources').and.returnValue(Promise.resolve()));
@@ -893,9 +983,7 @@ describe('prepare', () => {
                 }),
                 setVersionName: jasmine.createSpy('setVersionName').and.returnValue({
                     setVersionCode: jasmine.createSpy('setVersionCode').and.returnValue({
-                        setPackageId: jasmine.createSpy('setPackageId').and.returnValue({
-                            write: jasmine.createSpy('write')
-                        })
+                        write: jasmine.createSpy('write')
                     })
                 })
             }));
@@ -913,16 +1001,15 @@ describe('prepare', () => {
                 `))
             });
 
-            ensureDirSyncSpy = jasmine.createSpy('ensureDirSync');
-            copySyncSpy = jasmine.createSpy('copySync');
-            removeSyncSpy = jasmine.createSpy('removeSync');
+            mkdirSyncSpy = jasmine.createSpy('mkdirSync');
+            cpSyncSpy = jasmine.createSpy('cpSync');
+            rmSyncSpy = jasmine.createSpy('rmSync');
 
             prepare.__set__('fs', {
                 writeFileSync: jasmine.createSpy('writeFileSync'),
-                writeJSONSync: jasmine.createSpy('writeJSONSync'),
-                ensureDirSync: ensureDirSyncSpy,
-                copySync: copySyncSpy,
-                removeSync: removeSyncSpy,
+                mkdirSync: mkdirSyncSpy,
+                cpSync: cpSyncSpy,
+                rmSync: rmSyncSpy,
                 existsSync: jasmine.createSpy('existsSync')
             });
         });
@@ -934,9 +1021,9 @@ describe('prepare', () => {
 
             await api.prepare(cordovaProject, options).then(() => {
                 expect(replaceFileContents).toHaveBeenCalledWith(renamedJavaActivityPath, /package [\w.]*;/, 'package ' + packageName + ';');
-                expect(ensureDirSyncSpy).toHaveBeenCalledWith(renamedPath);
-                expect(copySyncSpy).toHaveBeenCalledWith(initialJavaActivityPath, renamedJavaActivityPath);
-                expect(removeSyncSpy).toHaveBeenCalledWith(initialJavaActivityPath);
+                expect(mkdirSyncSpy).toHaveBeenCalledWith(renamedPath, { recursive: true });
+                expect(cpSyncSpy).toHaveBeenCalledWith(initialJavaActivityPath, renamedJavaActivityPath);
+                expect(rmSyncSpy).toHaveBeenCalledWith(initialJavaActivityPath);
             });
         });
 
@@ -945,9 +1032,9 @@ describe('prepare', () => {
 
             await api.prepare(cordovaProject, options).then(() => {
                 expect(replaceFileContents).toHaveBeenCalledTimes(0);
-                expect(ensureDirSyncSpy).toHaveBeenCalledTimes(0);
-                expect(copySyncSpy).toHaveBeenCalledTimes(0);
-                expect(removeSyncSpy).toHaveBeenCalledTimes(0);
+                expect(mkdirSyncSpy).toHaveBeenCalledTimes(0);
+                expect(cpSyncSpy).toHaveBeenCalledTimes(0);
+                expect(rmSyncSpy).toHaveBeenCalledTimes(0);
             });
         });
     });

@@ -15,13 +15,5 @@
 # specific language governing permissions and limitations
 # under the License.
 
-extends: '@cordova/eslint-config/node'
-
-overrides:
-  - files: [spec/**/*.js]
-    extends: '@cordova/eslint-config/node-tests'
-    rules:
-      prefer-promise-reject-errors: off
-
-  - files: [cordova-js-src/**/*.js]
-    extends: '@cordova/eslint-config/browser'
+# Empty for the release audit workflow.
+# The `license-config` is required even if there are no custom configs

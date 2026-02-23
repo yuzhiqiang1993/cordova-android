@@ -45,25 +45,25 @@ public class SplashScreenPlugin extends CordovaPlugin {
 
     // Config preference values
     /**
-     * @param boolean autoHide to auto splash screen (default=true)
+     * Boolean flag to auto hide splash screen (default=true)
      */
     private boolean autoHide;
     /**
-     * @param int delayTime in milliseconds (default=-1)
+     * Integer value of how long to delay in milliseconds (default=-1)
      */
     private int delayTime;
     /**
-     * @param int fade to fade out splash screen (default=true)
+     * Boolean flag if to fade to fade out splash screen (default=true)
      */
     private boolean isFadeEnabled;
     /**
-     * @param int fadeDuration fade out duration in milliseconds (default=500)
+     * Integer value of the fade duration in milliseconds (default=500)
      */
     private int fadeDuration;
 
     // Internal variables
     /**
-     * @param boolean keepOnScreen flag to determine if the splash screen remains visible.
+     * Boolean flag to determine if the splash screen remains visible.
      */
     private boolean keepOnScreen = true;
 
@@ -155,10 +155,13 @@ public class SplashScreenPlugin extends CordovaPlugin {
                                 public void onAnimationEnd(Animator animation) {
                                     super.onAnimationEnd(animation);
                                     splashScreenViewProvider.remove();
+                                    webView.getPluginManager().postMessage("updateSystemBars", null);
                                 }
                             }).start();
                 }
             });
+        } else {
+            webView.getPluginManager().postMessage("updateSystemBars", null);
         }
     }
 
