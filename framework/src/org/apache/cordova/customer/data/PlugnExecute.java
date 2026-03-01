@@ -25,7 +25,8 @@ public class PlugnExecute {
     public PlugnExecute() {
     }
 
-    public PlugnExecute(String pluginName, String pluginClassName, String callbackId, String action, String rawArgs) {
+    public PlugnExecute(String url, String pluginName, String pluginClassName, String callbackId, String action, String rawArgs) {
+        this.url = url;
         this.pluginName = pluginName;
         this.pluginClassName = pluginClassName;
         this.callbackId = callbackId;

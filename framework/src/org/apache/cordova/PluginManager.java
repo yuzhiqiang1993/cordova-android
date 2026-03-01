@@ -32,8 +32,13 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Debug;
 import android.os.Build;
+import android.os.Build;
 import android.webkit.RenderProcessGoneDetail;
 import android.webkit.WebView;
+
+import org.apache.cordova.customer.CordovaApiInterceptor;
+import org.apache.cordova.customer.constant.PluginMessageId;
+import org.apache.cordova.customer.data.PlugnExecute;
 
 /**
  * PluginManager is exposed to JavaScript in the Cordova WebView.
@@ -60,6 +65,11 @@ public class PluginManager {
     private boolean isInitialized;
 
     private CordovaPlugin permissionRequester;
+
+    // API 拦截器，用于白名单权限控制
+    private CordovaApiInterceptor apiInterceptor;
+    // 缓存当前 URL
+    private volatile String currentUrl = "";
 
     public PluginManager(CordovaWebView cordovaWebView, CordovaInterface cordova, Collection<PluginEntry> pluginEntries) {
         this.ctx = cordova;
@@ -134,7 +144,31 @@ public class PluginManager {
      * @param rawArgs       An Array literal string containing any arguments needed in the
      *                      plugin execute method.
      */
+    /**
+     * 设置 API 拦截器，用于白名单权限控制
+     */
+    public void setApiInterceptor(CordovaApiInterceptor interceptor) {
+        this.apiInterceptor = interceptor;
+    }
+
     public void exec(final String service, final String action, final String callbackId, final String rawArgs) {
+        // 白名单拦截检查
+        if (apiInterceptor != null) {
+            try {
+                // 使用缓存的 URL，避免跨线程调用 WebView 方法
+                if (this.currentUrl != null && !this.currentUrl.isEmpty()) {
+                    if (!apiInterceptor.shouldAllowApi(this.currentUrl, service, action)) {
+                        PluginResult cr = new PluginResult(PluginResult.Status.ERROR,
+                                "API not allowed: " + service + "." + action);
+                        app.sendPluginResult(cr, callbackId);
+                        return;
+                    }
+                }
+            } catch (Exception e) {
+                LOG.e(TAG, "白名单拦截检测异常: " + service + "." + action, e);
+            }
+        }
+
         CordovaPlugin plugin = getPlugin(service);
         if (plugin == null) {
             LOG.d(TAG, "exec() call to unknown plugin: " + service);
@@ -144,6 +178,9 @@ public class PluginManager {
         }
         CallbackContext callbackContext = new CallbackContext(callbackId, app);
         try {
+            PlugnExecute plugnExec = new PlugnExecute(currentUrl, plugin.getServiceName(), plugin.getClass().getName(), callbackId, action, rawArgs);
+            postMessage(PluginMessageId.pluginExecute, plugnExec);
+
             long pluginStartTime = System.currentTimeMillis();
             boolean wasValidAction = plugin.execute(action, rawArgs, callbackContext);
             long duration = System.currentTimeMillis() - pluginStartTime;
@@ -347,6 +384,13 @@ public class PluginManager {
      */
     public Object postMessage(String id, Object data) {
         LOG.d(TAG, "postMessage: " + id);
+
+        if (PluginMessageId.onPageStarted.equals(id) || PluginMessageId.onPageFinished.equals(id)) {
+            if (data instanceof String) {
+                this.currentUrl = (String) data;
+            }
+        }
+
         synchronized (this.pluginMap) {
             this.pluginMap.forEach((s, plugin) -> {
                 if (plugin != null) {
@@ -530,6 +574,7 @@ public class PluginManager {
      * Called when the app navigates or refreshes.
      */
     public void onReset() {
+        this.currentUrl = null;
         synchronized (this.pluginMap) {
             for (CordovaPlugin plugin : this.pluginMap.values()) {
                 if (plugin != null) {
