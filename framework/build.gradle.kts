@@ -36,10 +36,8 @@ dependencies {
 
 mavenPublishing {
 
-    // 发布到 Maven Central (0.35.0 会智能检测 SNAPSHOT 分发到 S01)
     publishToMavenCentral()
     
-    // SNAPSHOT 版在新的 Central Portal 通常免去了强制签名，仅对 release 版执行
     val versionName = project.findProperty("VERSION_NAME")?.toString() ?: ""
     val isSnapshot = versionName.endsWith("SNAPSHOT", ignoreCase = true)
     if (!isSnapshot) {
