@@ -2,29 +2,22 @@
 
 plugins {
     id("com.android.library")
-    id("org.jetbrains.kotlin.android") version "1.8.22"
-    id("com.vanniktech.maven.publish") version "0.29.0"
+    id("com.vanniktech.maven.publish")
 }
-
-apply(from = "cordova.gradle")
-
-val cordovaConfig: Map<*, *> by project.extra
 
 android {
     namespace = "org.apache.cordova"
-    compileSdk = (cordovaConfig["COMPILE_SDK_VERSION"]?.toString()?.toInt()) ?: 34
+    compileSdk = 34
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
 
-    kotlinOptions {
-        jvmTarget = "11"
-    }
+
 
     defaultConfig {
-        minSdk = (cordovaConfig["MIN_SDK_VERSION"]?.toString()?.toInt()) ?: 24
+        minSdk = 21
     }
 
     sourceSets {
@@ -36,18 +29,15 @@ android {
     // Include config.xml setup script
     // apply from: "cordova.gradle" // 已在顶部 apply
 
-    // build-extras.gradle (如果需要支持 gradle 后缀)
-    val extFile = file("build-extras.gradle")
-    if (extFile.exists()) {
-        apply(from = extFile)
-    }
+
 }
 
 dependencies {
     implementation("androidx.annotation:annotation:1.5.0")
-    implementation("androidx.appcompat:appcompat:${cordovaConfig["ANDROIDX_APP_COMPAT_VERSION"]}")
-    implementation("androidx.webkit:webkit:${cordovaConfig["ANDROIDX_WEBKIT_VERSION"]}")
-    implementation("androidx.core:core-splashscreen:${cordovaConfig["ANDROIDX_CORE_SPLASHSCREEN_VERSION"]}")
+    implementation("androidx.appcompat:appcompat:1.6.1")
+    // 使用稳定支持的版本
+    implementation("androidx.webkit:webkit:1.3.0")
+    implementation("androidx.core:core-splashscreen:1.0.0")
 }
 
 mavenPublishing {

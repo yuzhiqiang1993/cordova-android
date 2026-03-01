@@ -84,6 +84,10 @@ public class CordovaInterfaceImpl implements CordovaInterface {
         activityResultCallback = plugin;
     }
 
+    public boolean hasActivityResultCallback() {
+        return activityResultCallback != null;
+    }
+
     @Override
     public AppCompatActivity getActivity() {
         return activity;
