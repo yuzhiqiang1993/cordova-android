@@ -24,6 +24,9 @@ import org.apache.cordova.CordovaWebView;
 import org.apache.cordova.PluginResult;
 import org.json.JSONObject;
 
+import org.apache.cordova.customer.constant.PluginMessageId;
+import org.apache.cordova.customer.data.PlugnExecResult;
+
 public class CallbackContext {
     private static final String LOG_TAG = "CordovaPlugin";
 
@@ -58,6 +61,10 @@ public class CallbackContext {
                 finished = !pluginResult.getKeepCallback();
             }
         }
+        /*自定义新增开始*/
+        PlugnExecResult plugnExecFinish = new PlugnExecResult(callbackId, PluginResult.StatusMessages[pluginResult.getStatus()], pluginResult.getMessage());
+        webView.getPluginManager().postMessage(PluginMessageId.pluginResult, plugnExecFinish);
+        /*自定义新增结束*/
         webView.sendPluginResult(pluginResult, callbackId);
     }
 

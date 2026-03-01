@@ -34,6 +34,8 @@ import org.apache.cordova.engine.SystemWebViewEngine;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import org.apache.cordova.customer.constant.PluginMessageId;
+
 import java.lang.reflect.Constructor;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -163,7 +165,7 @@ public class CordovaWebViewImpl implements CordovaWebView {
                 } catch (JSONException e) {
                     // Will never happen.
                 }
-                pluginManager.postMessage("onReceivedError", data);
+                pluginManager.postMessage(PluginMessageId.onReceivedError, data);
             }
         };
 
@@ -553,7 +555,7 @@ public class CordovaWebViewImpl implements CordovaWebView {
             LOG.d(TAG, "onPageDidNavigate(" + newUrl + ")");
             boundKeyCodes.clear();
             pluginManager.onReset();
-            pluginManager.postMessage("onPageStarted", newUrl);
+            pluginManager.postMessage(PluginMessageId.onPageStarted, newUrl);
         }
 
         @Override
@@ -567,7 +569,7 @@ public class CordovaWebViewImpl implements CordovaWebView {
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-            pluginManager.postMessage("onReceivedError", data);
+            pluginManager.postMessage(PluginMessageId.onReceivedError, data);
         }
 
         @Override
@@ -577,7 +579,7 @@ public class CordovaWebViewImpl implements CordovaWebView {
             clearLoadTimeoutTimer();
 
             // Broadcast message that page has loaded
-            pluginManager.postMessage("onPageFinished", url);
+            pluginManager.postMessage(PluginMessageId.onPageFinished, url);
 
             // Make app visible after 2 sec in case there was a JS error and Cordova JS never initialized correctly
             if (engine.getView().getVisibility() != View.VISIBLE) {
@@ -590,7 +592,7 @@ public class CordovaWebViewImpl implements CordovaWebView {
                                 cordova.getActivity().runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        pluginManager.postMessage("spinner", "stop");
+                                        pluginManager.postMessage(PluginMessageId.spinner, "stop");
                                     }
                                 });
                             } else {
@@ -605,7 +607,7 @@ public class CordovaWebViewImpl implements CordovaWebView {
 
             // Shutdown if blank loaded
             if (url.equals("about:blank")) {
-                pluginManager.postMessage("exit", null);
+                pluginManager.postMessage(PluginMessageId.exit, null);
             }
         }
 
@@ -657,12 +659,16 @@ public class CordovaWebViewImpl implements CordovaWebView {
 
         @Override
         public boolean onNavigationAttempt(String url) {
+            pluginManager.postMessage(PluginMessageId.onNavigationAttempt, url);
             // Give plugins the chance to handle the url
             if (pluginManager.onOverrideUrlLoading(url)) {
+                pluginManager.postMessage(PluginMessageId.onOverrideUrlLoading, url);
                 return true;
             } else if (pluginManager.shouldAllowNavigation(url)) {
+                pluginManager.postMessage(PluginMessageId.shouldAllowNavigation, url);
                 return false;
             } else if (pluginManager.shouldOpenExternalUrl(url)) {
+                pluginManager.postMessage(PluginMessageId.shouldOpenExternalUrl, url);
                 showWebPage(url, true, false, null);
                 return true;
             }

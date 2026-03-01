@@ -32,6 +32,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import org.apache.cordova.customer.constant.PluginMessageId;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -94,7 +96,7 @@ public class CordovaInterfaceImpl implements CordovaInterface {
 
     @Override
     public Object onMessage(String id, Object data) {
-        if ("exit".equals(id)) {
+        if (PluginMessageId.exit.equals(id)) {
             activity.finish();
         }
         return null;

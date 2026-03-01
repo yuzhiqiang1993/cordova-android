@@ -32,6 +32,8 @@ import android.content.IntentFilter;
 import android.telephony.TelephonyManager;
 import android.view.KeyEvent;
 
+import org.apache.cordova.customer.constant.PluginMessageId;
+
 import java.util.HashMap;
 
 /**
@@ -283,7 +285,7 @@ public class CoreAndroid extends CordovaPlugin {
      * Exit the Android application.
      */
     public void exitApp() {
-        this.webView.getPluginManager().postMessage("exit", null);
+        this.webView.getPluginManager().postMessage(PluginMessageId.exit, null);
     }
 
 

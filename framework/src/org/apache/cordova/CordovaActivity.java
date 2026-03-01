@@ -20,9 +20,10 @@ package org.apache.cordova;
 
 import java.util.ArrayList;
 import java.util.Locale;
-
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import org.apache.cordova.customer.constant.PluginMessageId;
 
 import android.app.AlertDialog;
 import android.annotation.SuppressLint;
@@ -478,14 +479,14 @@ public class CordovaActivity extends AppCompatActivity {
      * @return Object or null
      */
     public Object onMessage(String id, Object data) {
-        if ("onReceivedError".equals(id)) {
+        if (PluginMessageId.onReceivedError.equals(id)) {
             JSONObject d = (JSONObject) data;
             try {
                 this.onReceivedError(d.getInt("errorCode"), d.getString("description"), d.getString("url"));
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-        } else if ("exit".equals(id)) {
+        } else if (PluginMessageId.exit.equals(id)) {
             finish();
         }
         return null;

@@ -51,6 +51,8 @@ import org.apache.cordova.CordovaDialogsHelper;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.LOG;
 
+import org.apache.cordova.customer.constant.PluginMessageId;
+
 /**
  * This class is the WebChromeClient that implements callbacks for our web view.
  * The kind of callbacks that happen here are on the chrome outside the document,
@@ -326,6 +328,18 @@ public class SystemWebChromeClient extends WebChromeClient {
     public void onPermissionRequest(final PermissionRequest request) {
         LOG.d(LOG_TAG, "onPermissionRequest: " + Arrays.toString(request.getResources()));
         request.grant(request.getResources());
+    }
+
+    @Override
+    public void onProgressChanged(WebView view, int newProgress) {
+        super.onProgressChanged(view, newProgress);
+        parentEngine.pluginManager.postMessage(PluginMessageId.onProgressChanged, newProgress);
+    }
+
+    @Override
+    public void onReceivedTitle(WebView view, String title) {
+        super.onReceivedTitle(view, title);
+        parentEngine.pluginManager.postMessage(PluginMessageId.onReceivedTitle, title);
     }
 
     public void destroyLastDialog(){

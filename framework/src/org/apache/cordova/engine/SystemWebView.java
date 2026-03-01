@@ -30,6 +30,8 @@ import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaWebView;
 import org.apache.cordova.CordovaWebViewEngine;
 
+import org.apache.cordova.customer.listener.PageScrollChangedListener;
+
 /**
  * Custom WebView subclass that enables us to capture events needed for Cordova.
  */
@@ -38,6 +40,12 @@ public class SystemWebView extends WebView implements CordovaWebViewEngine.Engin
     SystemWebChromeClient chromeClient;
     private SystemWebViewEngine parentEngine;
     private CordovaInterface cordova;
+
+    private PageScrollChangedListener pageScrollChangedListener = null;
+
+    public void setOnPageScrollChangedListener(PageScrollChangedListener listener) {
+        this.pageScrollChangedListener = listener;
+    }
 
     public SystemWebView(Context context) {
         this(context, null);
@@ -84,5 +92,13 @@ public class SystemWebView extends WebView implements CordovaWebViewEngine.Engin
             return ret.booleanValue();
         }
         return super.dispatchKeyEvent(event);
+    }
+
+    @Override
+    protected void onScrollChanged(int l, int t, int oldl, int oldt) {
+        super.onScrollChanged(l, t, oldl, oldt);
+        if (this.pageScrollChangedListener != null) {
+            pageScrollChangedListener.onScrollChanged(l, t, oldl, oldt);
+        }
     }
 }
