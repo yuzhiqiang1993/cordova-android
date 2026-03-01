@@ -52,3 +52,7 @@ coverage/
 .project
 .settings
 .classpath
+
+# local ignoring
+.sisyphus/
+logs/

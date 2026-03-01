@@ -18,6 +18,7 @@
 */
 
 import java.util.regex.Pattern
+import groovy.xml.XmlParser
 import io.github.g00fy2.versioncompare.Version
 
 String doEnsureValueExists(filePath, props, key) {
@@ -197,7 +198,8 @@ def doVerifyCordovaConfigForBuild() {
 
 // Properties exported here are visible to all plugins.
 ext {
-    def defaultsFilePath = './cdv-gradle-config-defaults.json'
+    def scriptDir = buildscript.sourceFile.parent
+    def defaultsFilePath = "${scriptDir}/cdv-gradle-config-defaults.json"
     def projectConfigFilePath = "$rootDir/cdv-gradle-config.json"
     def targetConfigFilePath = null
 
